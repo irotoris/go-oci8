@@ -325,11 +325,27 @@ func (rows *OCI8Rows) ColumnTypeLength(i int) (length int64, ok bool) {
 	return int64(dataSize), true
 }
 
-/*
 func (rows *OCI8Rows) ColumnTypePrecisionScale(i int) (precision, scale int64, ok bool) {
-	return 0, 0, false
+        param, err := rows.stmt.ociParamGet(C.ub4(i + 1))
+        if err != nil {
+                return 0, 0, false
+        }
+        defer C.OCIDescriptorFree(unsafe.Pointer(param), C.OCI_DTYPE_PARAM)
+
+        var dataPrec C.ub4
+        var dataScale C.ub4
+
+        _, err = rows.stmt.conn.ociAttrGet(param, unsafe.Pointer(&dataPrec), C.OCI_ATTR_PRECISION)
+        if err != nil {
+                return 0, 0, false
+        }
+        _, err = rows.stmt.conn.ociAttrGet(param, unsafe.Pointer(&dataScale), C.OCI_ATTR_SCALE)
+        if err != nil {
+                return 0, 0, false
+        }
+
+        return int64(dataPrec), int64(dataScale), true
 }
-*/
 
 // ColumnTypeNullable implement RowsColumnTypeNullable.
 func (rows *OCI8Rows) ColumnTypeNullable(i int) (nullable, ok bool) {
